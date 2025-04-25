@@ -1,0 +1,49 @@
+.dashboard-container {
+  display: flex;
+}
+
+.sidebar {
+  width: 250px; /* Fixed width */
+  height: 100vh; /* Full height */
+  position: fixed;
+  background-color: #333;
+}
+
+.dashboard-content {
+  margin-left: 270px; /* Adjust margin based on sidebar width */
+  flex-grow: 1;
+  padding: 30px;
+  background-color: #f4f6f9;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  margin-top: 30px;
+}
+
+.box {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  font-size: 18px;
+}
+
+.queue-requests {
+  border-left: 6px solid #28a745;
+}
+
+.current-status {
+  border-left: 6px solid #ffc107;
+}
+
+.next-customer {
+  border-left: 6px solid #17a2b8;
+}
+
+.served-records {
+  border-left: 6px solid #dc3545;
+}
