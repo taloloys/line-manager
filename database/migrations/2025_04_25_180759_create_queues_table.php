@@ -15,8 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('customer_name');
             $table->integer('queue_number')->unique();
-            $table->enum('status', ['waiting', 'served'])->default('waiting');
-            $table->timestamps();
+            $table->enum('status', ['waiting', 'served', 'skipped'])->default('waiting');
+
+            $table->timestamp('served_at')->nullable();
         });
     }
 

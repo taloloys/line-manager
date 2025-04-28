@@ -8,7 +8,7 @@ const Sidebar = () => {
       <h2>Line Manager</h2>
       <ul>
         <li><Link to="/">Dashboard</Link></li>
-        <li><Link to="/queue">Queue Management</Link></li>
+        <li><Link to="/queue-management">Queue Management</Link></li>
         <li><Link to="/records">Served Records</Link></li>
         <li><Link to="/settings">Settings</Link></li>
       </ul>

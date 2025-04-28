@@ -9,5 +9,7 @@ class Queue extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['customer_name', 'queue_number', 'status'];
+    protected $fillable = ['customer_name', 'queue_number', 'status', 'served_at'];
+
+    public $timestamps = false;
 }

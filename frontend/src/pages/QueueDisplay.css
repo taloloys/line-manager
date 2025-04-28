@@ -1,0 +1,36 @@
+/* Center the queue display container */
+.queue-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f4f4f4;
+  }
+  
+  /* Style for queue cards */
+  .queue-card {
+    width: 350px;
+    height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    margin: 15px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+  }
+  
+  /* Text styling */
+  .queue-card h3 {
+    margin-bottom: 10px;
+  }
+  
+  .queue-card p {
+    font-size: 2.5rem;
+    font-weight: bold;
+  }

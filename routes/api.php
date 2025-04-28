@@ -1,20 +1,11 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\QueueController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and will be assigned the
-| "api" middleware group.
-|
-*/
-
-Route::post('/queue/checkin', [QueueController::class, 'checkIn']);
+Route::post('/queue/register', [QueueController::class, 'registerCustomer']);
+Route::get('/queue/status', [QueueController::class, 'getQueueStatus']);
 Route::get('/queue/status/{queue_number}', [QueueController::class, 'getStatus']);
-Route::put('/queue/serve/{queue_number}', [QueueController::class, 'serve']);
+Route::put('/queue/serve-next', [QueueController::class, 'serveNext']);
+Route::put('/queue/skip/{queue_number}', [QueueController::class, 'skipCustomer']);
+ROute::post('/queue/reset', [QueueController::class, 'resetQueue']);

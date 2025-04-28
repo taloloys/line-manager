@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -20,13 +19,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->app['router']->group([
-            'namespace' => 'App\Http\Controllers',
-            'prefix' => 'api',
-        ], function ($router) {
-            Route::post('/queue/checkin', 'QueueController@checkIn');
-            Route::get('/queue/status/{queue_number}', 'QueueController@getStatus');
-            Route::put('/queue/serve/{queue_number}', 'QueueController@serve');
-        });
+        $this->mapApiRoutes();
+    }
+
+    /**
+     * Define the "api" routes for the application.
+     */
+    protected function mapApiRoutes()
+    {
+        \Illuminate\Support\Facades\Route::prefix('api')
+            ->middleware('api')
+            ->namespace('App\Http\Controllers')
+            ->group(base_path('routes/api.php'));
     }
 }
