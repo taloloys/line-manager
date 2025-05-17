@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import './ServedRecords.css';
 import { format } from 'date-fns';
 import { CSVLink } from 'react-csv';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from "jspdf";
+import autoTable from 'jspdf-autotable';
 
 
 const ServedRecords = () => {
@@ -26,15 +26,34 @@ const ServedRecords = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `/api/records?page=${currentPage}&date=${selectedDate}&purpose=${purpose}&search=${search}&per_page=10`
+        `http://127.0.0.1:8000/api/records?page=${currentPage}&date=${selectedDate}&purpose=${purpose}&search=${search}&per_page=10`,
+        {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          }
+        }
       );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
+      if (!data.records || !data.records.data) {
+        throw new Error('Invalid response format from server');
+      }
+      
       setRecords(data.records.data);
       setTotalPages(Math.ceil(data.records.total / data.records.per_page));
-      setPurposes(data.purposes);
-      setLoading(false);
+      setPurposes(data.purposes || []);
     } catch (error) {
       console.error('Error fetching records:', error);
+      setRecords([]);
+      setTotalPages(1);
+      setPurposes([]);
+    } finally {
       setLoading(false);
     }
   };
@@ -42,11 +61,30 @@ const ServedRecords = () => {
   // Fetch daily stats
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/records/stats');
+      const response = await fetch('http://127.0.0.1:8000/api/records/stats', {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
+      if (!data.hasOwnProperty('total_served') || !Array.isArray(data.by_purpose)) {
+        throw new Error('Invalid response format from server');
+      }
+
       setStats(data);
     } catch (error) {
       console.error('Error fetching stats:', error);
+      setStats({
+        total_served: 0,
+        by_purpose: []
+      });
     }
   };
 
@@ -119,16 +157,8 @@ const ServedRecords = () => {
     doc.text(`Date: ${format(new Date(selectedDate), 'MMMM d, yyyy')}`, 14, 30);
     doc.text(`Purpose: ${purpose === 'all' ? 'All' : purpose}`, 14, 36);
     if (search) doc.text(`Search: ${search}`, 14, 42);
-    
-    // Add table header
-    doc.autoTable({
-      head: [['Queue #', 'Customer Name', 'Student ID', 'Purpose', 'Email', 'Served At', 'Wait Time']],
-      startY: 50,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [22, 160, 133] }
-    });
-    
-    // Create table
+
+    // Create table data
     const tableColumn = ["Queue #", "Name", "Student ID", "Purpose", "Email", "Served At", "Wait Time"];
     const tableRows = records.map(record => [
       record.queue_number,
@@ -143,10 +173,10 @@ const ServedRecords = () => {
     ]);
     
     // Generate the table
-    doc.autoTable({
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: 60,
+      startY: 50,
       styles: { fontSize: 8 },
       headStyles: { fillColor: [22, 160, 133] }
     });

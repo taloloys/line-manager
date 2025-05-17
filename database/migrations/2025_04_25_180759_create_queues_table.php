@@ -20,7 +20,7 @@ return new class extends Migration
             $table->integer('queue_number')->unique();
             $table->enum('status', ['waiting', 'served', 'skipped'])->default('waiting');
             $table->timestamp('served_at')->nullable();
-            $table->timestamp('created_at')->nullable();
+            $table->timestamps();
         });
     }
 

@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Queue;
+use App\Models\CustomerRecord;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache; // ✅ Added caching support
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class QueueController extends Controller
 {
@@ -42,7 +44,6 @@ class QueueController extends Controller
             'email' => $validated['email'] ?? null,
             'queue_number' => $queueNumber,
             'status' => 'waiting',
-            'created_at' => now(),
         ]);
 
         return response()->json([
@@ -92,43 +93,85 @@ class QueueController extends Controller
 
     /** 
      * Serve the first waiting customer and shift the queue forward automatically. 
+     * Also creates a record in customer_records.
      */
     public function serveNext(): JsonResponse
     {
-        $currentQueue = Queue::where('status', 'waiting')->orderBy('queue_number', 'asc')->first();
+        try {
+            $currentQueue = Queue::where('status', 'waiting')->orderBy('queue_number', 'asc')->first();
 
-        if (!$currentQueue) {
-            return response()->json(['message' => 'No queue to serve.'], 404);
+            if (!$currentQueue) {
+                return response()->json(['message' => 'No queue to serve.'], 404);
+            }
+
+            // Update queue status
+            $currentQueue->update([
+                'status' => 'served',
+                'served_at' => now(),
+            ]);
+
+            // Create record in customer_records table
+            CustomerRecord::insert([
+                'customer_name' => $currentQueue->customer_name,
+                'student_id' => $currentQueue->student_id,
+                'purpose' => $currentQueue->purpose,
+                'email' => $currentQueue->email,
+                'queue_number' => $currentQueue->queue_number,
+                'status' => 'served',
+                'served_at' => $currentQueue->served_at,
+                'created_at' => $currentQueue->created_at,
+                'updated_at' => now(),
+            ]);
+
+            // Clear cache so updated queue status reflects instantly
+            Cache::forget('queue_status');
+
+            // Find next waiting customer
+            $nextQueue = Queue::where('status', 'waiting')->orderBy('queue_number', 'asc')->first();
+
+            return response()->json([
+                'message' => 'Customer served successfully.',
+                'nextQueue' => $nextQueue ?? null,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error serving customer: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to serve customer',
+                'message' => $e->getMessage()
+            ], 500);
         }
-
-        $currentQueue->update([
-            'status' => 'served',
-            'served_at' => now(),
-        ]);
-
-        // ✅ Clear cache so updated queue status reflects instantly
-        Cache::forget('queue_status');
-
-        // Find next waiting customer
-        $nextQueue = Queue::where('status', 'waiting')->orderBy('queue_number', 'asc')->first();
-
-        return response()->json([
-            'message' => 'Customer served successfully.',
-            'nextQueue' => $nextQueue ?? null,
-        ]);
     }
 
+    /**
+     * Skip a customer and record in customer_records.
+     */
     public function skipCustomer($queue_number)
     {
         try {
             $queue = Queue::where('queue_number', $queue_number)->firstOrFail();
-            $queue->status = 'skipped'; // Ensure this value matches the database schema
+            $queue->status = 'skipped';
             $queue->served_at = now();
             $queue->save();
 
+            // Create record in customer_records table for skipped customer
+            CustomerRecord::insert([
+                'customer_name' => $queue->customer_name,
+                'student_id' => $queue->student_id,
+                'purpose' => $queue->purpose,
+                'email' => $queue->email,
+                'queue_number' => $queue->queue_number,
+                'status' => 'skipped',
+                'served_at' => $queue->served_at,
+                'created_at' => $queue->created_at
+            ]);
+
             return response()->json(['message' => 'Customer skipped successfully.']);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            Log::error('Error skipping customer: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to skip customer',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 

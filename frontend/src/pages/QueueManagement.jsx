@@ -8,6 +8,7 @@ const QueueManagement = () => {
   const [nextCustomer, setNextCustomer] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [notification, setNotification] = useState(""); // <-- Add this
 
   // Fetch queue data from Laravel API
   useEffect(() => {
@@ -54,6 +55,8 @@ const QueueManagement = () => {
     try {
       await axios.put(`http://127.0.0.1:8000/api/queue/skip/${queue_number}`);
       setQueueList(queueList.filter(q => q.queue_number !== queue_number));
+      setNotification("Customer skipped successfully!"); // <-- Set notification
+      setTimeout(() => setNotification(""), 2000); // Hide after 3 seconds
     } catch (err) {
       console.error("Skip Error:", err.response?.data?.message || err.message);
       setError("Failed to skip the customer. Please try again.");
@@ -66,6 +69,7 @@ return (
 
         {loading && <p>Loading queue data...</p>}
         {error && <p className="error">{error}</p>}
+        {notification && <p className="notification">{notification}</p>} {/* Show notification */}
 
         <div className="queue-grid">
             {/* Current Queue */}

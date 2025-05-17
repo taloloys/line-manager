@@ -23,6 +23,4 @@ class Queue extends Model
         'served_at' => 'datetime',
         'created_at' => 'datetime',
     ];
-
-    public $timestamps = false;
 }
