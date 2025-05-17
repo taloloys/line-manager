@@ -4,6 +4,7 @@ import Sidebar from "./components/sidebar";
 import Dashboard from "./pages/Dashboard";
 import QueueDisplay from "./pages/QueueDisplay";
 import QueueManagement from "./pages/QueueManagement";
+import ServedRecords from "./pages/ServedRecords";
 import './App.css';
 
 const App = () => {
@@ -23,6 +24,7 @@ const App = () => {
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/queue-management" element={<QueueManagement />} />
+                  <Route path="/records" element={<ServedRecords />} />
                   {/* Add more routes here */}
                 </Routes>
               </div>

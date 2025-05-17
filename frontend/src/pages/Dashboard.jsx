@@ -9,20 +9,34 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchQueueData = async () => {
-    try {
-      const response = await axios.get("http://127.0.0.1:8000/api/queue/status");
-      const waitingCustomers = response.data.queue.filter(q => q.status === "waiting");
-      setCurrentQueue(waitingCustomers.length > 0 ? waitingCustomers[0] : null);
-      setNextCustomer(waitingCustomers.length > 1 ? waitingCustomers[1] : null);
-      setServedCount(response.data.queue.filter(q => q.status === "served").length);
-      setError(null);
-    } catch (err) {
+ const fetchQueueData = async () => {
+  try {
+    const response = await axios.get("http://127.0.0.1:8000/api/queue/status");
+    const queue = Array.isArray(response.data.queue) ? response.data.queue : [];
+
+    const waitingCustomers = queue.filter(q => q.status === "waiting");
+    const servedCustomers = queue.filter(q => q.status === "served");
+
+    setCurrentQueue(waitingCustomers[0] || null);
+    setNextCustomer(waitingCustomers[1] || null);
+    setServedCount(servedCustomers.length);
+    setError(null);
+  } catch (err) {
+    if (err.response && err.response.status === 404) {
+      // Gracefully handle 404: no data yet
+      setCurrentQueue(null);
+      setNextCustomer(null);
+      setServedCount(0);
+      setError(null); // Do NOT show error
+    } else {
       setError("Failed to load queue data.");
-    } finally {
-      setLoading(false);
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   useEffect(() => {
     fetchQueueData();

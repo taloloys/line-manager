@@ -19,18 +19,30 @@ class QueueController extends Controller
             return response()->json(['message' => 'Unauthorized API request'], 403);
         }
 
+        // Accept either 'customer_name' or 'name'
         $validated = $request->validate([
-            'customer_name' => 'required|string|max:255',
+            'customer_name' => 'sometimes|required|string|max:255',
+            'name' => 'sometimes|required|string|max:255',
+            'student_id' => 'nullable|string|max:50',
+            'purpose' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
         ]);
+
+        // Use 'customer_name' if present, otherwise use 'name'
+        $customerName = $validated['customer_name'] ?? $validated['name'];
 
         // Generate queue number safely
         $queueNumber = Queue::max('queue_number') ? Queue::max('queue_number') + 1 : 1;
 
         // Store customer in queue
         $queue = Queue::create([
-            'customer_name' => $validated['customer_name'],
+            'customer_name' => $customerName,
+            'student_id' => $validated['student_id'] ?? null,
+            'purpose' => $validated['purpose'] ?? null,
+            'email' => $validated['email'] ?? null,
             'queue_number' => $queueNumber,
             'status' => 'waiting',
+            'created_at' => now(),
         ]);
 
         return response()->json([
@@ -106,7 +118,7 @@ class QueueController extends Controller
         ]);
     }
 
-    public function skip($queue_number)
+    public function skipCustomer($queue_number)
     {
         try {
             $queue = Queue::where('queue_number', $queue_number)->firstOrFail();

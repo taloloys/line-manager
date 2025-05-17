@@ -5,24 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Queue extends Model
+class CustomerRecord extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'customer_name',
-        'queue_number',
-        'status',
-        'served_at',
         'student_id',
         'purpose',
         'email',
-        'created_at'
+        'queue_number',
+        'status',
+        'served_at'
     ];
+
     protected $casts = [
         'served_at' => 'datetime',
         'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
-
-    public $timestamps = false;
 }

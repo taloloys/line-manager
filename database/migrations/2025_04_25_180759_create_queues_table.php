@@ -14,10 +14,13 @@ return new class extends Migration
         Schema::create('queues', function (Blueprint $table) {
             $table->id();
             $table->string('customer_name');
+            $table->string('student_id')->nullable(); // Added for external data
+            $table->string('purpose')->nullable();    // Added for external data
+            $table->string('email')->nullable();      // Added for external data
             $table->integer('queue_number')->unique();
             $table->enum('status', ['waiting', 'served', 'skipped'])->default('waiting');
-
             $table->timestamp('served_at')->nullable();
+            $table->timestamp('created_at')->nullable();
         });
     }
 
