@@ -175,21 +175,14 @@ class QueueController extends Controller
         }
     }
 
-    public function resetQueue()
+    public function resetQueue(): JsonResponse
     {
-        try {
-            // Reset queue numbers and statuses without truncating the table
-            Queue::query()->update([
-                'queue_number' => null,
-                'status' => 'waiting',
-                'served_at' => null,
-            ]);
+        // ✅ Delete all queue entries
+        \App\Models\Queue::truncate();
 
-            Cache::forget('queue_status'); // Clear cache
+        // ✅ Clear cache to reflect changes instantly
+        Cache::forget('queue_status');
 
-            return response()->json(['message' => 'Queue reset successfully.']);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
+        return response()->json(['message' => 'Queue reset successfully.']);
     }
 }

@@ -13,7 +13,8 @@ class CustomerRecordController extends Controller
      */
     public function index(Request $request)
     {
-        $query = CustomerRecord::where('status', 'served');
+        // Start with base query
+        $query = CustomerRecord::query();
 
         // Handle date filtering
         if ($request->has('date')) {
@@ -22,6 +23,11 @@ class CustomerRecordController extends Controller
         } else {
             // Default to today's records
             $query->whereDate('served_at', Carbon::today());
+        }
+
+        // Handle status filtering
+        if ($request->has('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
         }
 
         // Handle purpose filtering
@@ -42,8 +48,10 @@ class CustomerRecordController extends Controller
         $records = $query->orderBy('served_at', 'desc')
             ->paginate($request->per_page ?? 10);
 
-        // Get unique purposes for filter dropdown
-        $purposes = CustomerRecord::distinct('purpose')->pluck('purpose');
+        // Get purposes only for today's records
+        $purposes = CustomerRecord::whereDate('served_at', Carbon::today())
+            ->distinct('purpose')
+            ->pluck('purpose');
 
         return response()->json([
             'records' => $records,
@@ -62,10 +70,15 @@ class CustomerRecordController extends Controller
             ->where('status', 'served')
             ->count();
 
+        $totalSkipped = CustomerRecord::whereDate('served_at', $today)
+            ->where('status', 'skipped')
+            ->count();
+
         $byPurpose = CustomerRecord::whereDate('served_at', $today)
-            ->where('status', 'served')
+            ->whereIn('status', ['served', 'skipped'])
             ->selectRaw('purpose, COUNT(*) as count')
             ->groupBy('purpose')
+            ->orderBy('count', 'desc')
             ->get()
             ->map(function ($item) {
                 return [
@@ -77,6 +90,7 @@ class CustomerRecordController extends Controller
 
         return response()->json([
             'total_served' => $totalServed,
+            'total_skipped' => $totalSkipped,
             'by_purpose' => $byPurpose
         ]);
     }

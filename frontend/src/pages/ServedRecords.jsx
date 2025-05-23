@@ -16,17 +16,29 @@ const ServedRecords = () => {
   const [purpose, setPurpose] = useState('all');
   const [purposes, setPurposes] = useState([]);
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('all'); // 'all', 'served', 'skipped'
   const [stats, setStats] = useState({
     total_served: 0,
+    total_skipped: 0,
     by_purpose: []
   });
+
+  // Initialize theme from localStorage
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  }, []);
 
   // Fetch records based on filters
   const fetchRecords = async () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/api/records?page=${currentPage}&date=${selectedDate}&purpose=${purpose}&search=${search}&per_page=10`,
+        `http://127.0.0.1:8000/api/records?page=${currentPage}&date=${selectedDate}&purpose=${purpose}&search=${search}&status=${sortBy}&per_page=10`,
         {
           headers: {
             'Accept': 'application/json',
@@ -83,6 +95,7 @@ const ServedRecords = () => {
       console.error('Error fetching stats:', error);
       setStats({
         total_served: 0,
+        total_skipped: 0,
         by_purpose: []
       });
     }
@@ -92,7 +105,7 @@ const ServedRecords = () => {
   useEffect(() => {
     fetchRecords();
     fetchStats();
-  }, [currentPage, selectedDate, purpose]);
+  }, [currentPage, selectedDate, purpose, sortBy]);
 
   // Handle search form submission
   const handleSearch = (e) => {
@@ -185,6 +198,21 @@ const ServedRecords = () => {
     doc.save(`served-records-${selectedDate}.pdf`);
   };
 
+  // Get top purpose
+  const getTopPurpose = () => {
+    if (!stats.by_purpose || stats.by_purpose.length === 0) {
+      return { purpose: 'No top purpose', count: 0 };
+    }
+    return stats.by_purpose.reduce((max, current) => 
+      current.count > max.count ? current : max
+    , { purpose: 'No top purpose', count: 0 });
+  };
+
+  // Function to get status badge class
+  const getStatusBadgeClass = (status) => {
+    return status === 'served' ? 'status-badge served' : 'status-badge skipped';
+  };
+
   return (
     <div className="served-records-container">
       <h1>Served Customer Records</h1>
@@ -204,24 +232,31 @@ const ServedRecords = () => {
       </div>
       
       {/* Stats Panel */}
-      <div className="stats-panel">
-        <div className="stat-card">
-          <h3>Total Served Today</h3>
-          <p className="stat-value">{stats.total_served}</p>
+        <div className="stats-panel">
+          <div className="stat-card">
+            <h3>Total Served Today</h3>
+            <p className="stat-value">{stats.total_served ?? 0}</p>
+          </div>
+          <div className="stat-card">
+            <h3>Skipped Today</h3>
+            <p className="stat-value">{stats.total_skipped ?? 0}</p>
+          </div>
+          <div className="stat-card">
+            <h3>Top Purpose</h3>
+            <div className="top-purpose">
+          {getTopPurpose().purpose === 'No top purpose' ? (
+            <p>No top purpose</p>
+          ) : (
+            <>
+              <p>{getTopPurpose().purpose}</p>
+              <strong>{getTopPurpose().count}</strong>
+            </>
+          )}
+            </div>
+          </div>
         </div>
-        <div className="stat-card purpose-breakdown">
-          <h3>By Purpose</h3>
-          <ul>
-            {stats.by_purpose.map((item, index) => (
-              <li key={index}>
-                {item.purpose}: <strong>{item.count}</strong>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-      
-      {/* Filters */}
+        
+
       <div className="filters-container">
         <div className="filter-group">
           <label htmlFor="date-filter">Date:</label>
@@ -229,8 +264,27 @@ const ServedRecords = () => {
             type="date"
             id="date-filter"
             value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
+            onChange={(e) => {
+              setSelectedDate(e.target.value);
+              setCurrentPage(1); // Reset to first page when date changes
+            }}
           />
+        </div>
+        
+        <div className="filter-group">
+          <label htmlFor="status-filter">Status:</label>
+          <select
+            id="status-filter"
+            value={sortBy}
+            onChange={(e) => {
+              setSortBy(e.target.value);
+              setCurrentPage(1); // Reset to first page when status changes
+            }}
+          >
+            <option value="all">All Records</option>
+            <option value="served">Served</option>
+            <option value="skipped">Skipped</option>
+          </select>
         </div>
         
         <div className="filter-group">
@@ -275,6 +329,7 @@ const ServedRecords = () => {
                 <th>Student ID</th>
                 <th>Purpose</th>
                 <th>Email</th>
+                <th>Status</th>
                 <th>Served At</th>
                 <th>Wait Time</th>
               </tr>
@@ -287,6 +342,11 @@ const ServedRecords = () => {
                   <td>{record.student_id}</td>
                   <td>{record.purpose}</td>
                   <td>{record.email}</td>
+                  <td>
+                    <span className={getStatusBadgeClass(record.status)}>
+                      {record.status}
+                    </span>
+                  </td>
                   <td>{formatDateTime(record.served_at)}</td>
                   <td>
                     {record.created_at && record.served_at

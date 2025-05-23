@@ -131,26 +131,6 @@ return (
             )}
         </div>
 
-        {/* Reset Button */}
-        <div className="reset-section">
-            <button 
-                className="reset-btn" 
-                onClick={async () => {
-                    try {
-                        await axios.post("http://127.0.0.1:8000/api/queue/reset");
-                        setQueueList([]);
-                        setCurrentQueue(null);
-                        setNextCustomer(null);
-                        setError(null);
-                    } catch (err) {
-                        console.error("Reset Button Error:", err.response?.data || err.message);
-                        setError("Failed to reset the queue. Please try again.");
-                    }
-                }}
-            >
-                🔄 Reset Queue
-            </button>
-        </div>
     </div>
 );
 };

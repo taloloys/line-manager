@@ -1,10 +1,13 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext";
 import "./Sidebar.css";
 
 const Sidebar = () => {
+  const { darkMode } = useTheme();
+  
   return (
-    <div className="sidebar">
+    <div className={`sidebar ${darkMode ? 'dark' : 'light'}`}>
       <h2>Line Manager</h2>
       <ul>
         <li><Link to="/">Dashboard</Link></li>
