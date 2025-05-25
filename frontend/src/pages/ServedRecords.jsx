@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { CSVLink } from 'react-csv';
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
-
+import { useTheme } from "../context/ThemeContext";
 
 const ServedRecords = () => {
   // State variables
@@ -22,20 +22,17 @@ const ServedRecords = () => {
     total_skipped: 0,
     by_purpose: []
   });
+  const [error, setError] = useState(null);
+  const { darkMode } = useTheme();
 
   // Initialize theme from localStorage
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    } else {
-      document.documentElement.setAttribute('data-theme', 'light');
-    }
-  }, []);
+    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+  }, [darkMode]);
 
   // Fetch records based on filters
   const fetchRecords = async () => {
-    setLoading(true);
+    setLoading(true); // Set loading at start
     try {
       const response = await fetch(
         `http://127.0.0.1:8000/api/records?page=${currentPage}&date=${selectedDate}&purpose=${purpose}&search=${search}&status=${sortBy}&per_page=10`,
@@ -60,13 +57,15 @@ const ServedRecords = () => {
       setRecords(data.records.data);
       setTotalPages(Math.ceil(data.records.total / data.records.per_page));
       setPurposes(data.purposes || []);
+      setError(null);
     } catch (error) {
       console.error('Error fetching records:', error);
+      setError('Failed to load records. Please try again later.');
       setRecords([]);
       setTotalPages(1);
       setPurposes([]);
     } finally {
-      setLoading(false);
+      setLoading(false); // Always ensure loading is set to false when done
     }
   };
 
@@ -103,15 +102,28 @@ const ServedRecords = () => {
 
   // Effect hook to fetch records when filters change
   useEffect(() => {
-    fetchRecords();
-    fetchStats();
+    let isSubscribed = true;
+
+    const fetchData = async () => {
+      await fetchRecords();
+      if (isSubscribed) {
+        await fetchStats();
+      }
+    };
+
+    fetchData();
+
+    // Cleanup function to prevent state updates if component unmounts
+    return () => {
+      isSubscribed = false;
+    };
   }, [currentPage, selectedDate, purpose, sortBy]);
 
   // Handle search form submission
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
     setCurrentPage(1); // Reset to first page when searching
-    fetchRecords();
+    await fetchRecords();
   };
 
   // Format date and time for display
@@ -128,9 +140,26 @@ const ServedRecords = () => {
   };
 
   // Generate pagination buttons
-  const paginationButtons = () => {
+  const generatePaginationButtons = () => {
     const buttons = [];
-    for (let i = 1; i <= totalPages; i++) {
+    const maxVisibleButtons = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisibleButtons / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisibleButtons - 1);
+
+    if (endPage - startPage + 1 < maxVisibleButtons) {
+      startPage = Math.max(1, endPage - maxVisibleButtons + 1);
+    }
+
+    if (startPage > 1) {
+      buttons.push(
+        <button key="1" onClick={() => handlePageChange(1)}>1</button>
+      );
+      if (startPage > 2) {
+        buttons.push(<span key="ellipsis1" className="ellipsis">...</span>);
+      }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
       buttons.push(
         <button
           key={i}
@@ -141,6 +170,18 @@ const ServedRecords = () => {
         </button>
       );
     }
+
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        buttons.push(<span key="ellipsis2" className="ellipsis">...</span>);
+      }
+      buttons.push(
+        <button key={totalPages} onClick={() => handlePageChange(totalPages)}>
+          {totalPages}
+        </button>
+      );
+    }
+
     return buttons;
   };
 
@@ -148,9 +189,10 @@ const ServedRecords = () => {
   const csvData = records.map(record => ({
     Queue_Number: record.queue_number,
     Customer_Name: record.customer_name,
-    Student_ID: record.student_id,
-    Purpose: record.purpose,
-    Email: record.email,
+    Student_ID: record.student_id || '-',
+    Purpose: record.purpose || '-',
+    Email: record.email || '-',
+    Status: record.status,
     Served_At: formatDateTime(record.served_at),
     Wait_Time: record.created_at && record.served_at
       ? `${Math.round((new Date(record.served_at) - new Date(record.created_at)) / (1000 * 60))} min`
@@ -161,226 +203,507 @@ const ServedRecords = () => {
   const exportToPDF = () => {
     const doc = new jsPDF();
     
-    // Add title
+    // Add title and header info
     doc.setFontSize(18);
     doc.text('Served Customer Records', 14, 22);
     
-    // Add date and filters info
     doc.setFontSize(11);
     doc.text(`Date: ${format(new Date(selectedDate), 'MMMM d, yyyy')}`, 14, 30);
     doc.text(`Purpose: ${purpose === 'all' ? 'All' : purpose}`, 14, 36);
     if (search) doc.text(`Search: ${search}`, 14, 42);
 
-    // Create table data
-    const tableColumn = ["Queue #", "Name", "Student ID", "Purpose", "Email", "Served At", "Wait Time"];
+    // Add stats
+    doc.text('Summary:', 14, 50);
+    doc.text(`Total Served: ${stats.total_served}`, 14, 56);
+    doc.text(`Total Skipped: ${stats.total_skipped}`, 14, 62);
+
+    // Create table
+    const tableColumn = ["Queue #", "Name", "Student ID", "Purpose", "Status", "Served At", "Wait Time"];
     const tableRows = records.map(record => [
       record.queue_number,
       record.customer_name,
-      record.student_id,
-      record.purpose,
-      record.email,
+      record.student_id || '-',
+      record.purpose || '-',
+      record.status,
       formatDateTime(record.served_at),
       record.created_at && record.served_at
         ? `${Math.round((new Date(record.served_at) - new Date(record.created_at)) / (1000 * 60))} min`
         : '-'
     ]);
     
-    // Generate the table
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: 50,
+      startY: 70,
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [22, 160, 133] }
+      headStyles: { fillColor: [39, 174, 96] }
     });
     
-    // Save document
     doc.save(`served-records-${selectedDate}.pdf`);
   };
 
   // Get top purpose
   const getTopPurpose = () => {
     if (!stats.by_purpose || stats.by_purpose.length === 0) {
-      return { purpose: 'No top purpose', count: 0 };
+      return { purpose: 'No data available', count: 0 };
     }
     return stats.by_purpose.reduce((max, current) => 
       current.count > max.count ? current : max
-    , { purpose: 'No top purpose', count: 0 });
+    , { purpose: 'No data available', count: 0 });
   };
 
   // Function to get status badge class
   const getStatusBadgeClass = (status) => {
-    return status === 'served' ? 'status-badge served' : 'status-badge skipped';
+    return `status-badge ${status === 'served' ? 'served' : 'skipped'}`;
   };
+
+  const calculateEfficiency = () => {
+    const total = stats.total_served + stats.total_skipped;
+    if (total === 0) return 0;
+    return Math.round((stats.total_served / total) * 100);
+  };
+
+  if (loading) {
+    return (
+      <div className="served-records-container">
+        <div className="served-records-content">
+          <div className="records-header">
+            <h1>Served Customer Records</h1>
+            <div className="export-options">
+              <CSVLink 
+                data={csvData} 
+                filename={`served-records-${selectedDate}.csv`}
+                className="export-btn csv"
+              >
+                <span className="icon">📊</span>
+                Export to CSV
+              </CSVLink>
+              <button onClick={exportToPDF} className="export-btn pdf">
+                <span className="icon">📄</span>
+                Export to PDF
+              </button>
+            </div>
+          </div>
+          
+          {/* Stats Panel */}
+          <div className="stats-panel">
+            <div className="stat-card">
+              <div className="stat-icon">✅</div>
+              <div className="stat-content">
+                <h3>Total Served</h3>
+                <p className="stat-value">{stats.total_served}</p>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon">⏭️</div>
+              <div className="stat-content">
+                <h3>Total Skipped</h3>
+                <p className="stat-value">{stats.total_skipped}</p>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon">📈</div>
+              <div className="stat-content">
+                <h3>Service Efficiency</h3>
+                <p className="stat-value">{calculateEfficiency()}%</p>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon">🎯</div>
+              <div className="stat-content">
+                <h3>Top Purpose</h3>
+                <div className="top-purpose">
+                  <p>{getTopPurpose().purpose}</p>
+                  <strong>{getTopPurpose().count}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="filters-container">
+            <div className="filter-group">
+              <label htmlFor="date-filter">
+                <span className="icon">📅</span>
+                Date
+              </label>
+              <input
+                type="date"
+                id="date-filter"
+                value={selectedDate}
+                onChange={(e) => {
+                  setSelectedDate(e.target.value);
+                  setCurrentPage(1); // Reset to first page when date changes
+                }}
+              />
+            </div>
+            
+            <div className="filter-group">
+              <label htmlFor="status-filter">
+                <span className="icon">🔍</span>
+                Status
+              </label>
+              <select
+                id="status-filter"
+                value={sortBy}
+                onChange={(e) => {
+                  setSortBy(e.target.value);
+                  setCurrentPage(1); // Reset to first page when status changes
+                }}
+              >
+                <option value="all">All Records</option>
+                <option value="served">Served</option>
+                <option value="skipped">Skipped</option>
+              </select>
+            </div>
+            
+            <div className="filter-group">
+              <label htmlFor="purpose-filter">
+                <span className="icon">🎯</span>
+                Purpose
+              </label>
+              <select
+                id="purpose-filter"
+                value={purpose}
+                onChange={(e) => {
+                  setPurpose(e.target.value);
+                  setCurrentPage(1);
+                }}
+              >
+                <option value="all">All Purposes</option>
+                {purposes.map((p, index) => (
+                  <option key={index} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <form onSubmit={handleSearch} className="search-form">
+              <input
+                type="text"
+                placeholder="Search by name or ID..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <button type="submit">
+                <span className="icon">🔍</span>
+                Search
+              </button>
+            </form>
+          </div>
+          
+          {/* Records Table */}
+          {error ? (
+            <div className="error-message">
+              <span className="icon">⚠️</span>
+              {error}
+            </div>
+          ) : (
+            <div className="table-container">
+              <table className="records-table">
+                <thead>
+                  <tr>
+                    <th>Queue #</th>
+                    <th>Customer Name</th>
+                    <th>Student ID</th>
+                    <th>Purpose</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Served At</th>
+                    <th>Wait Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan="8">
+                        <div className="table-loading">
+                          <div className="loading-spinner"></div>
+                          <p>Loading records...</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : records.length === 0 ? (
+                    <tr>
+                      <td colSpan="8">
+                        <div className="no-records">
+                          <span className="icon">📭</span>
+                          <p>No records found for the selected filters</p>
+                          <small>Try adjusting your search criteria</small>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    records.map((record) => (
+                      <tr key={record.id}>
+                        <td>#{record.queue_number}</td>
+                        <td>{record.customer_name}</td>
+                        <td>{record.student_id || '-'}</td>
+                        <td>{record.purpose || '-'}</td>
+                        <td>{record.email || '-'}</td>
+                        <td>
+                          <span className={getStatusBadgeClass(record.status)}>
+                            {record.status}
+                          </span>
+                        </td>
+                        <td>{formatDateTime(record.served_at)}</td>
+                        <td>
+                          {record.created_at && record.served_at
+                            ? `${Math.round(
+                                (new Date(record.served_at) - new Date(record.created_at)) /
+                                  (1000 * 60)
+                              )} min`
+                            : '-'}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+          
+          {/* Pagination */}
+          <div className="pagination">
+            <button
+              className="nav-btn"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+            {generatePaginationButtons()}
+            <button
+              className="nav-btn"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="served-records-container">
-      <h1>Served Customer Records</h1>
-      
-      {/* Export Options */}
-      <div className="export-options">
-        <CSVLink 
-          data={csvData} 
-          filename={`served-records-${selectedDate}.csv`}
-          className="export-btn csv"
-        >
-          Export to CSV
-        </CSVLink>
-        <button onClick={exportToPDF} className="export-btn pdf">
-          Export to PDF
-        </button>
-      </div>
-      
-      {/* Stats Panel */}
+      <div className="served-records-content">
+        <div className="records-header">
+          <h1>Served Customer Records</h1>
+          <div className="export-options">
+            <CSVLink 
+              data={csvData} 
+              filename={`served-records-${selectedDate}.csv`}
+              className="export-btn csv"
+            >
+              <span className="icon">📊</span>
+              Export to CSV
+            </CSVLink>
+            <button onClick={exportToPDF} className="export-btn pdf">
+              <span className="icon">📄</span>
+              Export to PDF
+            </button>
+          </div>
+        </div>
+        
+        {/* Stats Panel */}
         <div className="stats-panel">
           <div className="stat-card">
-            <h3>Total Served Today</h3>
-            <p className="stat-value">{stats.total_served ?? 0}</p>
+            <div className="stat-icon">✅</div>
+            <div className="stat-content">
+              <h3>Total Served</h3>
+              <p className="stat-value">{stats.total_served}</p>
+            </div>
           </div>
           <div className="stat-card">
-            <h3>Skipped Today</h3>
-            <p className="stat-value">{stats.total_skipped ?? 0}</p>
+            <div className="stat-icon">⏭️</div>
+            <div className="stat-content">
+              <h3>Total Skipped</h3>
+              <p className="stat-value">{stats.total_skipped}</p>
+            </div>
           </div>
           <div className="stat-card">
-            <h3>Top Purpose</h3>
-            <div className="top-purpose">
-          {getTopPurpose().purpose === 'No top purpose' ? (
-            <p>No top purpose</p>
-          ) : (
-            <>
-              <p>{getTopPurpose().purpose}</p>
-              <strong>{getTopPurpose().count}</strong>
-            </>
-          )}
+            <div className="stat-icon">📈</div>
+            <div className="stat-content">
+              <h3>Service Efficiency</h3>
+              <p className="stat-value">{calculateEfficiency()}%</p>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon">🎯</div>
+            <div className="stat-content">
+              <h3>Top Purpose</h3>
+              <div className="top-purpose">
+                <p>{getTopPurpose().purpose}</p>
+                <strong>{getTopPurpose().count}</strong>
+              </div>
             </div>
           </div>
         </div>
         
-
-      <div className="filters-container">
-        <div className="filter-group">
-          <label htmlFor="date-filter">Date:</label>
-          <input
-            type="date"
-            id="date-filter"
-            value={selectedDate}
-            onChange={(e) => {
-              setSelectedDate(e.target.value);
-              setCurrentPage(1); // Reset to first page when date changes
-            }}
-          />
-        </div>
-        
-        <div className="filter-group">
-          <label htmlFor="status-filter">Status:</label>
-          <select
-            id="status-filter"
-            value={sortBy}
-            onChange={(e) => {
-              setSortBy(e.target.value);
-              setCurrentPage(1); // Reset to first page when status changes
-            }}
-          >
-            <option value="all">All Records</option>
-            <option value="served">Served</option>
-            <option value="skipped">Skipped</option>
-          </select>
-        </div>
-        
-        <div className="filter-group">
-          <label htmlFor="purpose-filter">Purpose:</label>
-          <select
-            id="purpose-filter"
-            value={purpose}
-            onChange={(e) => setPurpose(e.target.value)}
-          >
-            <option value="all">All Purposes</option>
-            {purposes.map((p, index) => (
-              <option key={index} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-        </div>
-        
-        <form onSubmit={handleSearch} className="search-form">
-          <input
-            type="text"
-            placeholder="Search by name or ID..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <button type="submit">Search</button>
-        </form>
-      </div>
-      
-      {/* Records Table */}
-      {loading ? (
-        <div className="loading">Loading records...</div>
-      ) : records.length === 0 ? (
-        <div className="no-records">No records found for selected filters.</div>
-      ) : (
-        <div className="table-container">
-          <table className="records-table">
-            <thead>
-              <tr>
-                <th>Queue #</th>
-                <th>Customer Name</th>
-                <th>Student ID</th>
-                <th>Purpose</th>
-                <th>Email</th>
-                <th>Status</th>
-                <th>Served At</th>
-                <th>Wait Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {records.map((record) => (
-                <tr key={record.id}>
-                  <td>{record.queue_number}</td>
-                  <td>{record.customer_name}</td>
-                  <td>{record.student_id}</td>
-                  <td>{record.purpose}</td>
-                  <td>{record.email}</td>
-                  <td>
-                    <span className={getStatusBadgeClass(record.status)}>
-                      {record.status}
-                    </span>
-                  </td>
-                  <td>{formatDateTime(record.served_at)}</td>
-                  <td>
-                    {record.created_at && record.served_at
-                      ? `${Math.round(
-                          (new Date(record.served_at) - new Date(record.created_at)) /
-                            (1000 * 60)
-                        )} min`
-                      : '-'}
-                  </td>
-                </tr>
+        <div className="filters-container">
+          <div className="filter-group">
+            <label htmlFor="date-filter">
+              <span className="icon">📅</span>
+              Date
+            </label>
+            <input
+              type="date"
+              id="date-filter"
+              value={selectedDate}
+              onChange={(e) => {
+                setSelectedDate(e.target.value);
+                setCurrentPage(1); // Reset to first page when date changes
+              }}
+            />
+          </div>
+          
+          <div className="filter-group">
+            <label htmlFor="status-filter">
+              <span className="icon">🔍</span>
+              Status
+            </label>
+            <select
+              id="status-filter"
+              value={sortBy}
+              onChange={(e) => {
+                setSortBy(e.target.value);
+                setCurrentPage(1); // Reset to first page when status changes
+              }}
+            >
+              <option value="all">All Records</option>
+              <option value="served">Served</option>
+              <option value="skipped">Skipped</option>
+            </select>
+          </div>
+          
+          <div className="filter-group">
+            <label htmlFor="purpose-filter">
+              <span className="icon">🎯</span>
+              Purpose
+            </label>
+            <select
+              id="purpose-filter"
+              value={purpose}
+              onChange={(e) => {
+                setPurpose(e.target.value);
+                setCurrentPage(1);
+              }}
+            >
+              <option value="all">All Purposes</option>
+              {purposes.map((p, index) => (
+                <option key={index} value={p}>
+                  {p}
+                </option>
               ))}
-            </tbody>
-          </table>
+            </select>
+          </div>
+          
+          <form onSubmit={handleSearch} className="search-form">
+            <input
+              type="text"
+              placeholder="Search by name or ID..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <button type="submit">
+              <span className="icon">🔍</span>
+              Search
+            </button>
+          </form>
         </div>
-      )}
-      
-      {/* Pagination */}
-      {totalPages > 1 && (
+        
+        {/* Records Table */}
+        {error ? (
+          <div className="error-message">
+            <span className="icon">⚠️</span>
+            {error}
+          </div>
+        ) : (
+          <div className="table-container">
+            <table className="records-table">
+              <thead>
+                <tr>
+                  <th>Queue #</th>
+                  <th>Customer Name</th>
+                  <th>Student ID</th>
+                  <th>Purpose</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th>Served At</th>
+                  <th>Wait Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan="8">
+                      <div className="table-loading">
+                        <div className="loading-spinner"></div>
+                        <p>Loading records...</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : records.length === 0 ? (
+                  <tr>
+                    <td colSpan="8">
+                      <div className="no-records">
+                        <span className="icon">📭</span>
+                        <p>No records found for the selected filters</p>
+                        <small>Try adjusting your search criteria</small>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  records.map((record) => (
+                    <tr key={record.id}>
+                      <td>#{record.queue_number}</td>
+                      <td>{record.customer_name}</td>
+                      <td>{record.student_id || '-'}</td>
+                      <td>{record.purpose || '-'}</td>
+                      <td>{record.email || '-'}</td>
+                      <td>
+                        <span className={getStatusBadgeClass(record.status)}>
+                          {record.status}
+                        </span>
+                      </td>
+                      <td>{formatDateTime(record.served_at)}</td>
+                      <td>
+                        {record.created_at && record.served_at
+                          ? `${Math.round(
+                              (new Date(record.served_at) - new Date(record.created_at)) /
+                                (1000 * 60)
+                            )} min`
+                          : '-'}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+        
+        {/* Pagination */}
         <div className="pagination">
           <button
+            className="nav-btn"
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
           >
             Previous
           </button>
-          {paginationButtons()}
+          {generatePaginationButtons()}
           <button
+            className="nav-btn"
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
           >
             Next
           </button>
         </div>
-      )}
+      </div>
     </div>
   );
 };

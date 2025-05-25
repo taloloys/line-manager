@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Queue;
 use App\Models\CustomerRecord;
+use App\Models\QueueSetting;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
@@ -19,6 +20,22 @@ class QueueController extends Controller
         // Validate API Key
         if ($request->header('x-api-key') !== env('QUEUE_API_KEY')) {
             return response()->json(['message' => 'Unauthorized API request'], 403);
+        }
+
+        // Get queue settings
+        $settings = QueueSetting::first();
+        if (!$settings) {
+            $settings = QueueSetting::create(['max_queue_size' => 50]); // Default value
+        }
+
+        // Check if queue is full
+        $currentQueueSize = Queue::where('status', 'waiting')->count();
+        if ($currentQueueSize >= $settings->max_queue_size) {
+            return response()->json([
+                'message' => 'Queue is currently full. Please try again later.',
+                'current_size' => $currentQueueSize,
+                'max_size' => $settings->max_queue_size
+            ], 409); // 409 Conflict status code
         }
 
         // Accept either 'customer_name' or 'name'

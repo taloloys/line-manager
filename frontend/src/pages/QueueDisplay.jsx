@@ -1,22 +1,68 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useTheme } from "../context/ThemeContext";
 import "./QueueDisplay.css";
 
 const QueueDisplay = () => {
   const [currentQueue, setCurrentQueue] = useState(null);
-  const [nextCustomer, setNextCustomer] = useState(null);
+  const [nextQueue, setNextQueue] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [settings, setSettings] = useState({
+    notification_sound: true,
+    privacy_mode: true
+  });
+  const { darkMode } = useTheme();
+
+  const fetchSettings = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/settings");
+      setSettings(response.data);
+    } catch (err) {
+      console.error("Failed to load settings:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  // Update current time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const fetchQueueData = async () => {
     try {
       const response = await axios.get("http://127.0.0.1:8000/api/queue/status");
-      const waitingCustomers = response.data.queue.filter(q => q.status === "waiting");
-      setCurrentQueue(waitingCustomers.length > 0 ? waitingCustomers[0] : null);
-      setNextCustomer(waitingCustomers.length > 1 ? waitingCustomers[1] : null);
+      console.log("Queue Display Data:", response.data);
+      const queue = Array.isArray(response.data.queue) ? response.data.queue : [];
+      const waitingCustomers = queue.filter(q => q.status === "waiting");
+      
+      // Get current queue
+      const current = waitingCustomers[0] || null;
+      if (current?.queue_number !== currentQueue?.queue_number) {
+        playNotification();
+      }
+      setCurrentQueue(current);
+      
+      // Get next 3 in queue (excluding current)
+      setNextQueue(waitingCustomers.slice(1, 4));
+      
       setError(null);
     } catch (err) {
-      setError("Failed to load queue data.");
+      console.error("Queue Display Error:", err);
+      if (err.response && err.response.status === 404) {
+        setCurrentQueue(null);
+        setNextQueue([]);
+        setError(null);
+      } else {
+        setError("System is temporarily unavailable");
+      }
     } finally {
       setLoading(false);
     }
@@ -28,24 +74,116 @@ const QueueDisplay = () => {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+  }, [darkMode]);
+
+  const playNotification = () => {
+    if (settings.notification_sound) {
+      const audio = new Audio("/sounds/notification.mp3");
+      audio.play().catch(err => console.log('Audio play failed:', err));
+    }
+  };
+
+  const displayCustomerInfo = (queue) => {
+    if (!queue) return '';
+    
+    if (settings.privacy_mode) {
+      return `${queue.purpose}`;
+    }
+    return `${queue.customer_name} - ${queue.purpose}`;
+  };
+
+  const formatTime = (date) => {
+    return date.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="queue-display">
+        <div className="loading">
+          <div className="loading-spinner"></div>
+          <p>Loading queue display...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="queue-display">
+        <div className="error">
+          <span className="error-icon">⚠️</span>
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="queue-display">
-      <h2>Queue Display</h2>
-      {loading && <p className="loading">Loading queue data...</p>}
-      {error && <p className="error">{error}</p>}
-      <div className="queue-info">
-        <div className="current-customer">
-          <h3>🔄 Currently Serving</h3>
+      <div className="display-header">
+        <div className="header-content">
+          <h1>Queue Display</h1>
+          <div className="current-time">
+            {currentTime.toLocaleTimeString()}
+          </div>
+        </div>
+      </div>
+
+      <div className="queue-display-content">
+        <div className="current-number">
           {currentQueue ? (
-            <p style={{ fontSize: "4rem", fontWeight: "bold" }}>#{currentQueue.queue_number}</p>
-          ) : <p>No active queue</p>}
+            <div className="current-queue-info">
+              <div className="number">#{currentQueue.queue_number}</div>
+              <div className="purpose">{displayCustomerInfo(currentQueue)}</div>
+              <div className="status-indicator">
+                <span className="pulse"></span>
+                Now Serving
+              </div>
+            </div>
+          ) : (
+            <div className="no-queue">
+              <p>No Active Queue</p>
+              <div className="subtitle">The service counter is ready for customers</div>
+            </div>
+          )}
         </div>
-        <div className="next-customer">
-          <h3>⏩ Next in Line</h3>
-          {nextCustomer ? (
-            <p style={{ fontSize: "3rem", fontWeight: "bold" }}>#{nextCustomer.queue_number}</p>
-          ) : <p>Waiting for next request...</p>}
+
+        <div className="next-numbers">
+          <h2>Next in Line</h2>
+          {nextQueue.length > 0 ? (
+            <div className="next-grid">
+              {nextQueue.map((queue, index) => (
+                <div key={queue.queue_number} className="next-item">
+                  <div className="position-label">Position {index + 1}</div>
+                  <div className="next-number">#{queue.queue_number}</div>
+                  <div className="next-purpose">{displayCustomerInfo(queue)}</div>
+                  <div className="wait-time">
+                    Waiting since {new Date(queue.created_at).toLocaleTimeString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="no-waiting">
+              <p>No customers waiting</p>
+              <small>Queue is currently empty</small>
+            </div>
+          )}
         </div>
+      </div>
+
+      <div className="display-footer">
+        <div className="announcement">
+          <span className="icon">📢</span>
+          Please wait for your number to be called
+        </div>
+        <p className="footer-note">Thank you for your patience</p>
       </div>
     </div>
   );

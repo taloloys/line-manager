@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import Sidebar from "./components/sidebar";
@@ -10,6 +10,35 @@ import SettingsPage from "./pages/SettingsPage"; // Uncomment if you have a sett
 import './App.css';
 
 const App = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const MenuButton = () => (
+    <button 
+      className="menu-toggle"
+      onClick={toggleSidebar}
+      aria-label="Toggle menu"
+    >
+      <svg 
+        width="24" 
+        height="24" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="2"
+      >
+        {isSidebarOpen ? (
+          <path d="M6 18L18 6M6 6l12 12" />
+        ) : (
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        )}
+      </svg>
+    </button>
+  );
+
   return (
     <ThemeProvider>
       <Router>
@@ -21,9 +50,10 @@ const App = () => {
           <Route
             path="*"
             element={
-              <div className="app">
-                <Sidebar />
+              <div className={`app ${isSidebarOpen ? 'sidebar-open' : ''}`}>
+                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
                 <div className="content">
+                  <MenuButton />
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/queue-management" element={<QueueManagement />} />

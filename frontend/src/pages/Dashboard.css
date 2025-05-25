@@ -1,49 +1,283 @@
-.dashboard-container {
-  display: flex;
+/* Light mode variables */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --text-primary: #2c3e50;
+  --text-secondary: #495057;
+  --border-color: #e9ecef;
+  --card-bg: white;
+  --accent-color: #27ae60;
+  --spacing-sm: 10px;
+  --spacing-md: 15px;
+  --spacing-lg: 20px;
+  --spacing-xl: 30px;
+  --content-max-width: 1800px;
+  --header-height: 80px;
+  --page-padding: var(--spacing-xl);
 }
 
-.sidebar {
-  width: 250px; /* Fixed width */
-  height: 100vh; /* Full height */
-  position: fixed;
-  background-color: #333;
+/* Dark mode variables */
+[data-theme='dark'] {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --text-primary: #ecf0f1;
+  --text-secondary: #bdc3c7;
+  --border-color: #404040;
+  --card-bg: #2d2d2d;
+  --accent-color: #2ecc71;
+}
+
+.dashboard-container {
+  padding: var(--page-padding);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 .dashboard-content {
-  margin-left: 270px; /* Adjust margin based on sidebar width */
-  flex-grow: 1;
-  padding: 30px;
-  background-color: #f4f6f9;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  width: 100%;
 }
 
-.grid-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 30px;
-  margin-top: 30px;
+/* Dashboard Header */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xl);
 }
 
-.box {
-  background-color: white;
-  padding: 20px;
+.dashboard-header h2 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.display-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
   border-radius: 8px;
-  box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.display-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.display-button .icon {
+  font-size: 1.25rem;
+}
+
+/* Stats Overview */
+.stats-overview {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+}
+
+.stat-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: var(--spacing-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+}
+
+.stat-icon {
+  font-size: 2rem;
+  opacity: 0.8;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-content h3 {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.5rem 0;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* Queue Status Grid */
+.queue-status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.status-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: var(--spacing-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.status-card h3 {
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-lg) 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.queue-info {
   text-align: center;
-  font-size: 18px;
+  padding: var(--spacing-lg);
 }
 
-.queue-requests {
-  border-left: 6px solid #28a745;
+.number-badge {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--accent-color);
+  margin-bottom: var(--spacing-md);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.current-status {
-  border-left: 6px solid #ffc107;
+.purpose {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-md);
 }
 
-.next-customer {
-  border-left: 6px solid #17a2b8;
+.time-info {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  opacity: 0.8;
 }
 
-.served-records {
-  border-left: 6px solid #dc3545;
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-xl) 0;
+  color: var(--text-secondary);
+}
+
+.empty-state p {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state small {
+  opacity: 0.7;
+}
+
+/* Quick Actions */
+.quick-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: center;
+}
+
+.action-button {
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.action-button.primary {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.action-button.secondary {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.action-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Loading State */
+.loading-spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: var(--spacing-md);
+  color: var(--text-secondary);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .stats-overview {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: var(--spacing-md);
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    text-align: center;
+  }
+
+  .stats-overview,
+  .queue-status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-actions {
+    flex-direction: column;
+  }
+
+  .action-button {
+    width: 100%;
+  }
+}
+
+.error-message.connection-error {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+[data-theme='dark'] .error-message.connection-error {
+  background-color: rgba(255, 243, 205, 0.1);
+  color: #ffd700;
+  border-color: rgba(255, 238, 186, 0.2);
 }

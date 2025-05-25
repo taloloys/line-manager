@@ -1,69 +1,537 @@
+/* Light mode variables */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --text-primary: #2c3e50;
+  --text-secondary: #495057;
+  --border-color: #e9ecef;
+  --card-bg: white;
+  --accent-color: #27ae60;
+  --skip-color: #e67e22;
+  --notification-bg: #e6ffed;
+  --notification-color: #207245;
+  --notification-border: #b7ebc6;
+  --spacing-sm: 10px;
+  --spacing-md: 15px;
+  --spacing-lg: 20px;
+  --spacing-xl: 30px;
+  --content-max-width: 1800px;
+  --header-height: 80px;
+  --page-padding: var(--spacing-xl);
+}
+
+/* Dark mode variables */
+[data-theme='dark'] {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --text-primary: #ecf0f1;
+  --text-secondary: #bdc3c7;
+  --border-color: #404040;
+  --card-bg: #2d2d2d;
+  --accent-color: #2ecc71;
+  --skip-color: #e67e22;
+  --notification-bg: rgba(46, 204, 113, 0.1);
+  --notification-color: #2ecc71;
+  --notification-border: rgba(46, 204, 113, 0.2);
+}
+
+/* Queue Management Container */
 .queue-management {
-  text-align: center;
-  padding: 20px;
-  background-color: #f4f4f4;
-  min-height: 100vh;
+  padding: var(--page-padding);
+  padding-bottom: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
-/* Grid Layout for Queue Cards */
-.queue-grid {
+.queue-management-content {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Management Header */
+.management-header {
   display: flex;
-  justify-content: center;
-  gap: 20px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xl);
 }
 
-/* Queue Card */
-.queue-card {
-  width: 300px;
-  padding: 20px;
-  background-color: white;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+.management-header h2 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.queue-stats {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.stat {
+  background: var(--card-bg);
+  padding: 0.75rem 1.5rem;
   border-radius: 8px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--accent-color);
+}
+
+/* Queue Grid */
+.queue-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+/* Queue Cards */
+.queue-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.queue-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-header h3 {
+  font-size: 1.25rem;
+  margin: 0;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-badge.active {
+  background: rgba(39, 174, 96, 0.1);
+  color: var(--accent-color);
+}
+
+.status-badge.waiting {
+  background: rgba(241, 196, 15, 0.1);
+  color: #f1c40f;
+}
+
+.pulse {
+  width: 8px;
+  height: 8px;
+  background-color: currentColor;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+/* Customer Info */
+.customer-info {
+  padding: 2rem;
   text-align: center;
 }
 
-/* Queue Number */
 .queue-number {
-  font-size: 2rem;
-  font-weight: bold;
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--accent-color);
+  margin-bottom: 1rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Customer Name */
-.customer-name {
-  font-size: 1.3rem;
-  color: #555;
+.purpose {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
 }
 
-/* Button Styling */
+.waiting-time {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  opacity: 0.8;
+  margin-bottom: 1.5rem;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
 button {
-  padding: 10px;
-  margin: 5px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
   border: none;
-  border-radius: 5px;
+  font-weight: 500;
   cursor: pointer;
-  font-size: 1rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .serve-btn {
-  background-color: green;
+  background-color: var(--accent-color);
   color: white;
+}
+
+.serve-btn:hover {
+  background-color: #219a52;
+  transform: translateY(-2px);
 }
 
 .skip-btn {
-  background-color: orange;
+  background-color: var(--skip-color);
   color: white;
 }
 
-.notification {
-  background-color: #e6ffed;
-  color: #207245;
-  border: 1px solid #b7ebc6;
-  padding: 12px 20px;
-  margin: 16px 0;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 1rem;
-  box-shadow: 0 2px 8px rgba(32, 114, 69, 0.08);
-  transition: opacity 0.3s;
+.skip-btn:hover {
+  background-color: #d35400;
+  transform: translateY(-2px);
+}
+
+.cancel-btn {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.cancel-btn:hover {
+  background-color: var(--border-color);
+}
+
+/* Empty States */
+.empty-state {
+  padding: 3rem 2rem;
   text-align: center;
+  color: var(--text-secondary);
+}
+
+.empty-state p {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state small {
+  font-size: 0.875rem;
+  opacity: 0.7;
+}
+
+/* Waiting List */
+.waiting-list {
+  margin-top: var(--spacing-xl);
+}
+
+.waiting-list h3 {
+  font-size: 1.5rem;
+  margin-bottom: var(--spacing-lg);
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.waiting-customers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.waiting-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  padding: 1.5rem;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.waiting-card:hover {
+  transform: translateY(-4px);
+}
+
+.waiting-card .queue-number {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.waiting-card .purpose {
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+  min-height: 3em;
+}
+
+/* Notifications */
+.notification {
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+  animation: slideIn 0.3s ease;
+}
+
+.notification.success {
+  background-color: var(--notification-bg);
+  color: var(--notification-color);
+  border: 1px solid var(--notification-border);
+}
+
+.notification.error {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 500px;
+  animation: slideIn 0.3s ease;
+}
+
+.modal-content h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+
+.modal-customer-info {
+  background: var(--bg-secondary);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.confirmation-text {
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.modal-actions button {
+  flex: 1;
+}
+
+/* Loading State */
+.loading-spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: var(--spacing-md);
+  color: var(--text-secondary);
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--accent-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .queue-grid {
+    gap: var(--spacing-md);
+  }
+
+  .waiting-customers-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .queue-management {
+    padding: var(--spacing-md);
+  }
+
+  .management-header {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    text-align: center;
+  }
+
+  .queue-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .waiting-customers-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .modal-content {
+    width: 95%;
+    padding: 1.5rem;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .queue-number {
+    font-size: 2.5rem;
+  }
+
+  .purpose {
+    font-size: 1rem;
+  }
+
+  .stat {
+    padding: 0.5rem 1rem;
+  }
+
+  .stat-value {
+    font-size: 1.25rem;
+  }
+}
+
+/* SweetAlert2 Custom Styles */
+.swal2-popup {
+  font-family: inherit;
+  border-radius: 12px !important;
+}
+
+.swal2-title {
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+}
+
+.swal2-html-container {
+  font-size: 1rem !important;
+}
+
+.swal2-confirm {
+  background-color: var(--accent-color) !important;
+}
+
+.swal2-toast {
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Error Message */
+.error-message.connection-error {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+[data-theme='dark'] .error-message.connection-error {
+  background-color: rgba(255, 243, 205, 0.1);
+  color: #ffd700;
+  border-color: rgba(255, 238, 186, 0.2);
 }
