@@ -3,6 +3,7 @@ import axios from "axios";
 import { useTheme } from "../context/ThemeContext";
 import Swal from 'sweetalert2';
 import "./QueueManagement.css";
+import { FaSyncAlt, FaStepForward, FaList, FaPlug, FaCheck, FaUserClock } from "react-icons/fa";
 
 const QueueManagement = () => {
   const [queueList, setQueueList] = useState([]);
@@ -116,7 +117,6 @@ const QueueManagement = () => {
         color: darkMode ? '#ecf0f1' : '#2c3e50'
       });
       
-      playSound();
       setConfirmAction(null);
     } catch (err) {
       console.error("Serve Error:", err.response?.data?.message || err.message);
@@ -188,7 +188,7 @@ const QueueManagement = () => {
     <div className="modal-overlay">
       <div className="modal-content">
         <h3>
-          {action === 'serve' ? '✅ Serve Customer' : '⏩ Skip Customer'}
+          {action === 'serve' ? <><FaCheck /> Serve Customer</> : <><FaStepForward /> Skip Customer</>}
         </h3>
         <div className="modal-customer-info">
           <p className="queue-number">#{customer.queue_number}</p>
@@ -232,10 +232,10 @@ const QueueManagement = () => {
     <div className="queue-management">
       <div className="queue-management-content">
         <div className="management-header">
-          <h2>Queue Management</h2>
+          <h2><FaList style={{ marginRight: 8 }} />Queue Management</h2>
           <div className="queue-stats">
             <div className="stat">
-              <span className="stat-label">Total Waiting</span>
+              <span className="stat-label"><FaUserClock style={{ marginRight: 4 }} />Total Waiting</span>
               <span className="stat-value">{queueList.length}</span>
             </div>
           </div>
@@ -243,7 +243,7 @@ const QueueManagement = () => {
 
         {error && (
           <div className="error-message connection-error">
-            <span className="icon">🔌</span>
+            <span className="icon"><FaPlug /></span>
             {error}
           </div>
         )}
@@ -256,39 +256,34 @@ const QueueManagement = () => {
         <div className="queue-grid">
           <div className="queue-card current">
             <div className="card-header">
-              <h3>🔄 Currently Serving</h3>
+              <h3><FaSyncAlt style={{ marginRight: 6 }} />Currently Serving</h3>
               {currentQueue && (
                 <span className="status-badge active">
                   <span className="pulse"></span>
-                  Active
+                  <p />Active
                 </span>
               )}
             </div>
             {currentQueue ? (
               <div className="customer-info">
-                <div className="queue-number">#{currentQueue.queue_number}</div>
-                <div className="purpose">{displayCustomerInfo(currentQueue)}</div>
+                <div className="queue-number"><p/>#{currentQueue.queue_number}</div>
+                <div className="purpose"><FaUserClock style={{ marginRight: 4 }} />{displayCustomerInfo(currentQueue)}</div>
                 <div className="waiting-time">
+                  <FaUserClock style={{ marginRight: 4 }} />
                   Waiting for: {formatWaitingTime(currentQueue.created_at)}
                 </div>
                 <div className="action-buttons">
-                  <button 
-                    className="serve-btn"
-                    onClick={() => handleConfirmAction('serve', currentQueue)}
-                  >
-                    ✅ Serve
+                  <button className="serve-btn" onClick={() => handleConfirmAction('serve', currentQueue)}>
+                    <FaCheck style={{ marginRight: 4 }} />Serve
                   </button>
-                  <button 
-                    className="skip-btn"
-                    onClick={() => handleConfirmAction('skip', currentQueue)}
-                  >
-                    ⏩ Skip
+                  <button className="skip-btn" onClick={() => handleConfirmAction('skip', currentQueue)}>
+                    <FaStepForward style={{ marginRight: 4 }} />Skip
                   </button>
                 </div>
               </div>
             ) : (
               <div className="empty-state">
-                <p>No active queue</p>
+                <p><FaPlug style={{ marginRight: 4 }} />No active queue</p>
                 <small>Ready to serve next customer</small>
               </div>
             )}
@@ -296,30 +291,31 @@ const QueueManagement = () => {
 
           <div className="queue-card next">
             <div className="card-header">
-              <h3>⏩ Next in Line</h3>
+              <h3><FaStepForward style={{ marginRight: 6 }} />Next in Line</h3>
               {nextCustomer && (
                 <span className="status-badge waiting">
-                  Ready
+                  <FaUserClock style={{ marginRight: 4 }} />Ready
                 </span>
               )}
             </div>
             {nextCustomer ? (
               <div className="customer-info">
-                <div className="queue-number">#{nextCustomer.queue_number}</div>
-                <div className="purpose">{displayCustomerInfo(nextCustomer)}</div>
+                <div className="queue-number"><p />#{nextCustomer.queue_number}</div>
+                <div className="purpose"><FaUserClock style={{ marginRight: 4 }} />{displayCustomerInfo(nextCustomer)}</div>
                 <div className="waiting-time">
+                  <FaUserClock style={{ marginRight: 4 }} />
                   Waiting for: {formatWaitingTime(nextCustomer.created_at)}
                 </div>
                 <button 
                   className="skip-btn"
                   onClick={() => handleConfirmAction('skip', nextCustomer)}
                 >
-                  ⏩ Skip
+                  <FaStepForward style={{ marginRight: 4 }} />Skip
                 </button>
               </div>
             ) : (
               <div className="empty-state">
-                <p>No customers waiting</p>
+                <p><FaPlug style={{ marginRight: 4 }} />No customers waiting</p>
                 <small>Queue is currently empty</small>
               </div>
             )}
@@ -328,20 +324,21 @@ const QueueManagement = () => {
 
         {queueList.length > 2 && (
           <div className="waiting-list">
-            <h3>📋 Waiting List</h3>
+            <h3><p/>Waiting List</h3>
             <div className="waiting-customers-grid">
               {queueList.slice(2, 6).map((customer) => (
                 <div key={customer.queue_number} className="waiting-card">
-                  <div className="queue-number">#{customer.queue_number}</div>
-                  <div className="purpose">{displayCustomerInfo(customer)}</div>
+                  <div className="queue-number"><p />#{customer.queue_number}</div>
+                  <div className="purpose"><FaUserClock style={{ marginRight: 4 }} />{displayCustomerInfo(customer)}</div>
                   <div className="waiting-time">
+                    <FaUserClock style={{ marginRight: 4 }} />
                     Waiting for: {formatWaitingTime(customer.created_at)}
                   </div>
                   <button 
                     className="skip-btn"
                     onClick={() => handleConfirmAction('skip', customer)}
                   >
-                    ⏩ Skip
+                    <FaStepForward style={{ marginRight: 4 }} />Skip
                   </button>
                 </div>
               ))}

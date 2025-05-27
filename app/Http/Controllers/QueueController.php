@@ -85,28 +85,6 @@ class QueueController extends Controller
         return response()->json(['queue' => $queue]);
     }
 
-    /** 
-     * Get status of a specific queue number. 
-     */
-    public function getStatus($queue_number): JsonResponse
-    {
-        $queue = Queue::where('queue_number', $queue_number)->first();
-
-        if (!$queue) {
-            return response()->json(['message' => 'Queue number not found.'], 404);
-        }
-
-        // Calculate queue position dynamically
-        $position = Queue::where('status', 'waiting')
-            ->where('queue_number', '<=', $queue_number)
-            ->count();
-
-        return response()->json([
-            'queue_number' => $queue_number,
-            'position_in_queue' => $position,
-            'status' => $queue->status,
-        ]);
-    }
 
     /** 
      * Serve the first waiting customer and shift the queue forward automatically. 
@@ -201,5 +179,25 @@ class QueueController extends Controller
         Cache::forget('queue_status');
 
         return response()->json(['message' => 'Queue reset successfully.']);
+    }
+
+    /**
+     * Get the currently serving queue number (first 'waiting' customer).
+     */
+    public function getCurrentServingQueue(): JsonResponse
+    {
+        $current = Queue::where('status', 'waiting')
+            ->orderBy('queue_number', 'asc')
+            ->first();
+
+        if (!$current) {
+            return response()->json(['message' => 'No customer is currently being served.'], 404);
+        }
+
+        return response()->json([
+            'current_queue_number' => $current->queue_number,
+            'customer_name' => $current->customer_name,
+            'status' => $current->status,
+        ]);
     }
 }

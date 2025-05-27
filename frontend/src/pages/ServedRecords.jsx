@@ -5,6 +5,18 @@ import { CSVLink } from 'react-csv';
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
 import { useTheme } from "../context/ThemeContext";
+import { 
+  FaFileExcel, 
+  FaFilePdf, 
+  FaCheckCircle, 
+  FaForward, 
+  FaChartLine, 
+  FaBullseye,
+  FaCalendarAlt,
+  FaSearch,
+  FaExclamationTriangle,
+  FaInbox
+} from "react-icons/fa";
 
 const ServedRecords = () => {
   // State variables
@@ -275,11 +287,11 @@ const ServedRecords = () => {
                 filename={`served-records-${selectedDate}.csv`}
                 className="export-btn csv"
               >
-                <span className="icon">📊</span>
+                <span className="icon"><FaFileExcel /></span>
                 Export to CSV
               </CSVLink>
               <button onClick={exportToPDF} className="export-btn pdf">
-                <span className="icon">📄</span>
+                <span className="icon"><FaFilePdf /></span>
                 Export to PDF
               </button>
             </div>
@@ -288,28 +300,28 @@ const ServedRecords = () => {
           {/* Stats Panel */}
           <div className="stats-panel">
             <div className="stat-card">
-              <div className="stat-icon">✅</div>
+              <div className="stat-icon"><FaCheckCircle /></div>
               <div className="stat-content">
                 <h3>Total Served</h3>
                 <p className="stat-value">{stats.total_served}</p>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-icon">⏭️</div>
+              <div className="stat-icon"><FaForward /></div>
               <div className="stat-content">
                 <h3>Total Skipped</h3>
                 <p className="stat-value">{stats.total_skipped}</p>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-icon">📈</div>
+              <div className="stat-icon"><FaChartLine /></div>
               <div className="stat-content">
                 <h3>Service Efficiency</h3>
                 <p className="stat-value">{calculateEfficiency()}%</p>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-icon">🎯</div>
+              <div className="stat-icon"><FaBullseye /></div>
               <div className="stat-content">
                 <h3>Top Purpose</h3>
                 <div className="top-purpose">
@@ -323,7 +335,7 @@ const ServedRecords = () => {
           <div className="filters-container">
             <div className="filter-group">
               <label htmlFor="date-filter">
-                <span className="icon">📅</span>
+                <span className="icon"><FaCalendarAlt /></span>
                 Date
               </label>
               <input
@@ -339,7 +351,7 @@ const ServedRecords = () => {
             
             <div className="filter-group">
               <label htmlFor="status-filter">
-                <span className="icon">🔍</span>
+                <span className="icon"><FaSearch /></span>
                 Status
               </label>
               <select
@@ -358,7 +370,7 @@ const ServedRecords = () => {
             
             <div className="filter-group">
               <label htmlFor="purpose-filter">
-                <span className="icon">🎯</span>
+                <span className="icon"><FaBullseye /></span>
                 Purpose
               </label>
               <select
@@ -386,7 +398,7 @@ const ServedRecords = () => {
                 onChange={(e) => setSearch(e.target.value)}
               />
               <button type="submit">
-                <span className="icon">🔍</span>
+                <span className="icon"><FaSearch /></span>
                 Search
               </button>
             </form>
@@ -395,7 +407,7 @@ const ServedRecords = () => {
           {/* Records Table */}
           {error ? (
             <div className="error-message">
-              <span className="icon">⚠️</span>
+              <span className="icon"><FaExclamationTriangle /></span>
               {error}
             </div>
           ) : (
@@ -427,7 +439,7 @@ const ServedRecords = () => {
                     <tr>
                       <td colSpan="8">
                         <div className="no-records">
-                          <span className="icon">📭</span>
+                          <span className="icon"><FaInbox /></span>
                           <p>No records found for the selected filters</p>
                           <small>Try adjusting your search criteria</small>
                         </div>
@@ -497,11 +509,11 @@ const ServedRecords = () => {
               filename={`served-records-${selectedDate}.csv`}
               className="export-btn csv"
             >
-              <span className="icon">📊</span>
+              <span className="icon"><FaFileExcel /></span>
               Export to CSV
             </CSVLink>
             <button onClick={exportToPDF} className="export-btn pdf">
-              <span className="icon">📄</span>
+              <span className="icon"><FaFilePdf /></span>
               Export to PDF
             </button>
           </div>
@@ -510,28 +522,28 @@ const ServedRecords = () => {
         {/* Stats Panel */}
         <div className="stats-panel">
           <div className="stat-card">
-            <div className="stat-icon">✅</div>
+            <div className="stat-icon"><FaCheckCircle /></div>
             <div className="stat-content">
               <h3>Total Served</h3>
               <p className="stat-value">{stats.total_served}</p>
             </div>
           </div>
           <div className="stat-card">
-            <div className="stat-icon">⏭️</div>
+            <div className="stat-icon"><FaForward /></div>
             <div className="stat-content">
               <h3>Total Skipped</h3>
               <p className="stat-value">{stats.total_skipped}</p>
             </div>
           </div>
           <div className="stat-card">
-            <div className="stat-icon">📈</div>
+            <div className="stat-icon"><FaChartLine /></div>
             <div className="stat-content">
               <h3>Service Efficiency</h3>
               <p className="stat-value">{calculateEfficiency()}%</p>
             </div>
           </div>
           <div className="stat-card">
-            <div className="stat-icon">🎯</div>
+            <div className="stat-icon"><FaBullseye /></div>
             <div className="stat-content">
               <h3>Top Purpose</h3>
               <div className="top-purpose">
@@ -545,7 +557,7 @@ const ServedRecords = () => {
         <div className="filters-container">
           <div className="filter-group">
             <label htmlFor="date-filter">
-              <span className="icon">📅</span>
+              <span className="icon"><FaCalendarAlt /></span>
               Date
             </label>
             <input
@@ -561,7 +573,7 @@ const ServedRecords = () => {
           
           <div className="filter-group">
             <label htmlFor="status-filter">
-              <span className="icon">🔍</span>
+              <span className="icon"><FaSearch /></span>
               Status
             </label>
             <select
@@ -580,7 +592,7 @@ const ServedRecords = () => {
           
           <div className="filter-group">
             <label htmlFor="purpose-filter">
-              <span className="icon">🎯</span>
+              <span className="icon"><FaBullseye /></span>
               Purpose
             </label>
             <select
@@ -608,7 +620,7 @@ const ServedRecords = () => {
               onChange={(e) => setSearch(e.target.value)}
             />
             <button type="submit">
-              <span className="icon">🔍</span>
+              <span className="icon"><FaSearch /></span>
               Search
             </button>
           </form>
@@ -617,7 +629,7 @@ const ServedRecords = () => {
         {/* Records Table */}
         {error ? (
           <div className="error-message">
-            <span className="icon">⚠️</span>
+            <span className="icon"><FaExclamationTriangle /></span>
             {error}
           </div>
         ) : (
@@ -649,7 +661,7 @@ const ServedRecords = () => {
                   <tr>
                     <td colSpan="8">
                       <div className="no-records">
-                        <span className="icon">📭</span>
+                        <span className="icon"><FaInbox /></span>
                         <p>No records found for the selected filters</p>
                         <small>Try adjusting your search criteria</small>
                       </div>

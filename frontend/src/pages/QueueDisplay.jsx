@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useTheme } from "../context/ThemeContext";
+import { FaExclamationTriangle, FaBullhorn } from "react-icons/fa";
 import "./QueueDisplay.css";
 
 const QueueDisplay = () => {
@@ -14,6 +15,8 @@ const QueueDisplay = () => {
     privacy_mode: true
   });
   const { darkMode } = useTheme();
+  const [lastNotifiedQueueNumber, setLastNotifiedQueueNumber] = useState(null);
+  const lastNotifiedRef = useRef(null); // <-- add this line
 
   const fetchSettings = async () => {
     try {
@@ -26,6 +29,8 @@ const QueueDisplay = () => {
 
   useEffect(() => {
     fetchSettings();
+    const interval = setInterval(fetchSettings, 5000); // Poll every 5 seconds
+    return () => clearInterval(interval);
   }, []);
 
   // Update current time every second
@@ -39,20 +44,27 @@ const QueueDisplay = () => {
   const fetchQueueData = async () => {
     try {
       const response = await axios.get("http://127.0.0.1:8000/api/queue/status");
-      console.log("Queue Display Data:", response.data);
       const queue = Array.isArray(response.data.queue) ? response.data.queue : [];
       const waitingCustomers = queue.filter(q => q.status === "waiting");
-      
+
       // Get current queue
       const current = waitingCustomers[0] || null;
-      if (current?.queue_number !== currentQueue?.queue_number) {
+
+      // Only play notification if the queue number is new
+      if (
+        current?.queue_number &&
+        current.queue_number !== lastNotifiedRef.current
+      ) {
         playNotification();
+        setLastNotifiedQueueNumber(current.queue_number);
+        lastNotifiedRef.current = current.queue_number; // <-- update ref here
       }
+
       setCurrentQueue(current);
-      
+
       // Get next 3 in queue (excluding current)
       setNextQueue(waitingCustomers.slice(1, 4));
-      
+
       setError(null);
     } catch (err) {
       console.error("Queue Display Error:", err);
@@ -117,7 +129,7 @@ const QueueDisplay = () => {
     return (
       <div className="queue-display">
         <div className="error">
-          <span className="error-icon">⚠️</span>
+          <span className="error-icon"><FaExclamationTriangle /></span>
           <p>{error}</p>
         </div>
       </div>
@@ -180,7 +192,7 @@ const QueueDisplay = () => {
 
       <div className="display-footer">
         <div className="announcement">
-          <span className="icon">📢</span>
+          <span className="icon"><FaBullhorn /></span>
           Please wait for your number to be called
         </div>
         <p className="footer-note">Thank you for your patience</p>

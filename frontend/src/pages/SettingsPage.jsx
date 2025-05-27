@@ -2,6 +2,12 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useTheme } from "../context/ThemeContext";
 import Swal from 'sweetalert2';
+import { 
+  FaSun, 
+  FaMoon, 
+  FaExclamationTriangle, 
+  FaTrash 
+} from "react-icons/fa";
 import "./SettingsPage.css";
 
 const SettingsPage = () => {
@@ -182,13 +188,13 @@ const SettingsPage = () => {
               />
               <span className="slider"></span>
             </label>
-            <span className="label">{darkMode ? '🌙' : '☀️'}</span>
+            <span className="label">{darkMode ? <FaMoon /> : <FaSun />}</span>
           </div>
         </div>
 
         {error && (
           <div className="error-message">
-            <span className="icon">⚠️</span>
+            <span className="icon"><FaExclamationTriangle /></span>
             {error}
           </div>
         )}
@@ -300,7 +306,7 @@ const SettingsPage = () => {
 
         <div className="settings-section danger-zone">
           <h3>
-            <span className="icon">⚠️</span>
+            <span className="icon"><FaExclamationTriangle /></span>
             Danger Zone
           </h3>
           <p className="warning-text">
@@ -311,7 +317,7 @@ const SettingsPage = () => {
             className="reset-btn" 
             onClick={confirmResetQueue}
           >
-            <span className="icon">🗑️</span>
+            <span className="icon"><FaTrash /></span>
             Reset Queue
           </button>
         </div>

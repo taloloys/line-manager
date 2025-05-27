@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { 
+  FaTv, 
+  FaPlug, 
+  FaUsers, 
+  FaCheckCircle, 
+  FaClock, 
+  FaChartBar, 
+  FaSync, 
+  FaForward 
+} from "react-icons/fa";
 import "./Dashboard.css";
 
 const Dashboard = () => {
@@ -155,42 +165,42 @@ const Dashboard = () => {
               );
             }}
           >
-            <span className="icon">📺</span>
+            <span className="icon"><FaTv /></span>
             Open Queue Display
           </button>
         </div>
 
         {error && (
           <div className="error-message connection-error">
-            <span className="icon">🔌</span>
+            <span className="icon"><FaPlug /></span>
             {error}
           </div>
         )}
 
         <div className="stats-overview">
           <div className="stat-card total-waiting">
-            <div className="stat-icon">👥</div>
+            <div className="stat-icon"><FaUsers /></div>
             <div className="stat-content">
               <h3>Waiting in Queue</h3>
               <p className="stat-value">{queueStats.waitingCount}</p>
             </div>
           </div>
           <div className="stat-card total-served">
-            <div className="stat-icon">✅</div>
+            <div className="stat-icon"><FaCheckCircle /></div>
             <div className="stat-content">
               <h3>Served Today</h3>
               <p className="stat-value">{servedCount}</p>
             </div>
           </div>
           <div className="stat-card avg-wait">
-            <div className="stat-icon">⏱️</div>
+            <div className="stat-icon"><FaClock /></div>
             <div className="stat-content">
               <h3>Average Wait Time</h3>
               <p className="stat-value">{queueStats.averageWaitTime} min</p>
             </div>
           </div>
           <div className="stat-card peak-hour">
-            <div className="stat-icon">📊</div>
+            <div className="stat-icon"><FaChartBar /></div>
             <div className="stat-content">
               <h3>Peak Hour</h3>
               <p className="stat-value">{queueStats.peakHour}</p>
@@ -200,7 +210,7 @@ const Dashboard = () => {
 
         <div className="queue-status-grid">
           <div className="status-card current-status">
-            <h3>🔄 Currently Serving</h3>
+            <h3><FaSync /> Currently Serving</h3>
             {currentQueue ? (
               <div className="queue-info">
                 <div className="number-badge">#{currentQueue.queue_number}</div>
@@ -218,7 +228,7 @@ const Dashboard = () => {
           </div>
 
           <div className="status-card next-customer">
-            <h3>⏩ Next in Line</h3>
+            <h3><FaForward /> Next in Line</h3>
             {nextCustomer ? (
               <div className="queue-info">
                 <div className="number-badge">#{nextCustomer.queue_number}</div>

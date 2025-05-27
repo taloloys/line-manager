@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import "./Sidebar.css";
+import { FaMoon, FaSun } from "react-icons/fa";
 
 // Icons for navigation items
 const NavIcons = {
@@ -70,7 +71,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       <div className="sidebar-header">
         <h2>Line Manager</h2>
         <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
-          {darkMode ? '🌙' : '☀️'}
+          {darkMode ? <FaMoon /> : <FaSun />}
         </button>
       </div>
       
