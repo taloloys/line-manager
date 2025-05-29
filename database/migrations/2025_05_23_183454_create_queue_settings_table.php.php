@@ -16,7 +16,6 @@ return new class extends Migration
             $table->integer('max_queue_size')->default(50);
             $table->boolean('notification_sound')->default(true);
             $table->integer('auto_refresh_interval')->default(5);
-            $table->integer('display_timeout')->default(30);
             $table->boolean('privacy_mode')->default(true);
             $table->timestamps();
         });

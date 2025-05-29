@@ -345,7 +345,7 @@ const QueueManagement = () => {
             </div>
           </div>
         )}
-
+        
         {confirmAction && (
           <ConfirmationModal
             action={confirmAction.action}

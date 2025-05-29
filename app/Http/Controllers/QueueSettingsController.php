@@ -21,7 +21,7 @@ class QueueSettingsController extends Controller
                 'max_queue_size' => 50,
                 'notification_sound' => true,
                 'auto_refresh_interval' => 5,
-                'display_timeout' => 30,
+
                 'privacy_mode' => true
             ]);
         }
@@ -38,7 +38,6 @@ class QueueSettingsController extends Controller
             'max_queue_size' => 'required|integer|min:1',
             'notification_sound' => 'required|boolean',
             'auto_refresh_interval' => 'required|integer|min:1|max:60',
-            'display_timeout' => 'required|integer|min:5|max:300',
             'privacy_mode' => 'required|boolean'
         ]);
 

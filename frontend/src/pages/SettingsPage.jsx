@@ -235,21 +235,6 @@ const SettingsPage = () => {
             <p className="input-help">How often the queue display should refresh automatically.</p>
           </div>
 
-          <div className="input-group">
-            <label htmlFor="displayTimeout">Display Timeout (seconds):</label>
-            <input
-              id="displayTimeout"
-              type="number"
-              min="5"
-              max="300"
-              value={settings.display_timeout}
-              onChange={(e) => setSettings({
-                ...settings,
-                display_timeout: parseInt(e.target.value)
-              })}
-            />
-            <p className="input-help">How long to show each customer's information on the display screen.</p>
-          </div>
         </div>
 
         <div className="settings-section">
