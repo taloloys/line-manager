@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('purpose')->nullable();
             $table->string('email')->nullable();
             $table->integer('queue_number');
-            $table->enum('status', ['served', 'skipped'])->default('served');
+            $table->enum('status', ['served', 'skipped', 'cancelled'])->default('served');
             $table->timestamp('served_at')->nullable();
             $table->timestamps();
         });

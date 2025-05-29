@@ -15,7 +15,8 @@ import {
   FaCalendarAlt,
   FaSearch,
   FaExclamationTriangle,
-  FaInbox
+  FaInbox,
+  FaBan
 } from "react-icons/fa";
 
 const ServedRecords = () => {
@@ -32,8 +33,10 @@ const ServedRecords = () => {
   const [stats, setStats] = useState({
     total_served: 0,
     total_skipped: 0,
+    total_cancelled: 0,
     by_purpose: []
   });
+  const [statuses, setStatuses] = useState(['served', 'skipped', 'cancelled']);
   const [error, setError] = useState(null);
   const { darkMode } = useTheme();
 
@@ -44,7 +47,7 @@ const ServedRecords = () => {
 
   // Fetch records based on filters
   const fetchRecords = async () => {
-    setLoading(true); // Set loading at start
+    setLoading(true);
     try {
       const response = await fetch(
         `http://127.0.0.1:8000/api/records?page=${currentPage}&date=${selectedDate}&purpose=${purpose}&search=${search}&status=${sortBy}&per_page=10`,
@@ -69,6 +72,10 @@ const ServedRecords = () => {
       setRecords(data.records.data);
       setTotalPages(Math.ceil(data.records.total / data.records.per_page));
       setPurposes(data.purposes || []);
+      // Set available statuses from the response
+      if (data.statuses) {
+        setStatuses(data.statuses);
+      }
       setError(null);
     } catch (error) {
       console.error('Error fetching records:', error);
@@ -77,7 +84,7 @@ const ServedRecords = () => {
       setTotalPages(1);
       setPurposes([]);
     } finally {
-      setLoading(false); // Always ensure loading is set to false when done
+      setLoading(false);
     }
   };
 
@@ -266,7 +273,7 @@ const ServedRecords = () => {
 
   // Function to get status badge class
   const getStatusBadgeClass = (status) => {
-    return `status-badge ${status === 'served' ? 'served' : 'skipped'}`;
+    return `status-badge ${status === 'served' ? 'served' : status === 'skipped' ? 'skipped' : 'cancelled'}`;
   };
 
   const calculateEfficiency = () => {
@@ -311,6 +318,13 @@ const ServedRecords = () => {
               <div className="stat-content">
                 <h3>Total Skipped</h3>
                 <p className="stat-value">{stats.total_skipped}</p>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon"><FaBan /></div>
+              <div className="stat-content">
+                <h3>Total Cancelled</h3>
+                <p className="stat-value">{stats.total_cancelled}</p>
               </div>
             </div>
             <div className="stat-card">
@@ -359,12 +373,15 @@ const ServedRecords = () => {
                 value={sortBy}
                 onChange={(e) => {
                   setSortBy(e.target.value);
-                  setCurrentPage(1); // Reset to first page when status changes
+                  setCurrentPage(1);
                 }}
               >
                 <option value="all">All Records</option>
-                <option value="served">Served</option>
-                <option value="skipped">Skipped</option>
+                {statuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                  </option>
+                ))}
               </select>
             </div>
             
@@ -536,6 +553,13 @@ const ServedRecords = () => {
             </div>
           </div>
           <div className="stat-card">
+            <div className="stat-icon"><FaBan /></div>
+            <div className="stat-content">
+              <h3>Total Cancelled</h3>
+              <p className="stat-value">{stats.total_cancelled}</p>
+            </div>
+          </div>
+          <div className="stat-card">
             <div className="stat-icon"><FaChartLine /></div>
             <div className="stat-content">
               <h3>Service Efficiency</h3>
@@ -581,12 +605,15 @@ const ServedRecords = () => {
               value={sortBy}
               onChange={(e) => {
                 setSortBy(e.target.value);
-                setCurrentPage(1); // Reset to first page when status changes
+                setCurrentPage(1);
               }}
             >
               <option value="all">All Records</option>
-              <option value="served">Served</option>
-              <option value="skipped">Skipped</option>
+              {statuses.map((status) => (
+                <option key={status} value={status}>
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </option>
+              ))}
             </select>
           </div>
           

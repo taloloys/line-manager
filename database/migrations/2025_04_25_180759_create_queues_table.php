@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('purpose')->nullable();    // Added for external data
             $table->string('email')->nullable();      // Added for external data
             $table->integer('queue_number')->unique();
-            $table->enum('status', ['waiting', 'served', 'skipped'])->default('waiting');
+            $table->enum('status', ['waiting', 'served', 'skipped', 'cancelled'])->default('waiting');
             $table->timestamp('served_at')->nullable();
             $table->timestamps();
         });

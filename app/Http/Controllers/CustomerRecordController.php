@@ -53,9 +53,13 @@ class CustomerRecordController extends Controller
             ->distinct('purpose')
             ->pluck('purpose');
 
+        // Get distinct statuses
+        $statuses = CustomerRecord::distinct('status')->pluck('status');
+
         return response()->json([
             'records' => $records,
-            'purposes' => $purposes
+            'purposes' => $purposes,
+            'statuses' => $statuses
         ]);
     }
 
@@ -74,8 +78,12 @@ class CustomerRecordController extends Controller
             ->where('status', 'skipped')
             ->count();
 
+        $totalCancelled = CustomerRecord::whereDate('served_at', $today)
+            ->where('status', 'cancelled')
+            ->count();
+
         $byPurpose = CustomerRecord::whereDate('served_at', $today)
-            ->whereIn('status', ['served', 'skipped'])
+            ->whereIn('status', ['served', 'skipped', 'cancelled'])
             ->selectRaw('purpose, COUNT(*) as count')
             ->groupBy('purpose')
             ->orderBy('count', 'desc')
@@ -91,6 +99,7 @@ class CustomerRecordController extends Controller
         return response()->json([
             'total_served' => $totalServed,
             'total_skipped' => $totalSkipped,
+            'total_cancelled' => $totalCancelled,
             'by_purpose' => $byPurpose
         ]);
     }

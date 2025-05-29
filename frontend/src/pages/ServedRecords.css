@@ -345,8 +345,13 @@ select:focus {
 }
 
 .status-badge.skipped {
-  background-color: var(--error-bg);
-  color: var(--danger-color);
+  background-color: var(--warning-color);
+  color: #000;
+}
+
+.status-badge.cancelled {
+  background-color: var(--danger-color);
+  color: white;
 }
 
 /* Pagination */

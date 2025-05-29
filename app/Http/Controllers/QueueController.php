@@ -200,4 +200,60 @@ class QueueController extends Controller
             'status' => $current->status,
         ]);
     }
+
+    /**
+     * Cancel a specific queue number.
+     * Requires API key authentication.
+     */
+    public function cancelQueue(Request $request, $queue_number): JsonResponse
+    {
+        if ($request->header('x-api-key') !== env('QUEUE_API_KEY')) {
+            return response()->json(['message' => 'Unauthorized API request'], 403);
+        }
+
+        try {
+            $queue = Queue::where('queue_number', $queue_number)
+                         ->where('status', 'waiting')
+                         ->first();
+
+            if (!$queue) {
+                return response()->json([
+                    'message' => 'Queue number not found or already processed.'
+                ], 404);
+            }
+
+            // Update queue status
+            $queue->update([
+                'status' => 'cancelled',
+                'served_at' => now(),
+            ]);
+
+            // Create record in customer_records table
+            CustomerRecord::insert([
+                'customer_name' => $queue->customer_name,
+                'student_id' => $queue->student_id,
+                'purpose' => $queue->purpose,
+                'email' => $queue->email,
+                'queue_number' => $queue->queue_number,
+                'status' => 'cancelled',
+                'served_at' => $queue->served_at,
+                'created_at' => $queue->created_at,
+                'updated_at' => now(),
+            ]);
+
+            Cache::forget('queue_status');
+
+            return response()->json([
+                'message' => 'Queue cancelled successfully.',
+                'queue_number' => $queue_number
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error cancelling queue: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to cancel queue',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
