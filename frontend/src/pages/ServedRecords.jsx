@@ -277,7 +277,7 @@ const ServedRecords = () => {
   };
 
   const calculateEfficiency = () => {
-    const total = stats.total_served + stats.total_skipped;
+    const total = stats.total_served + stats.total_skipped + stats.total_cancelled;
     if (total === 0) return 0;
     return Math.round((stats.total_served / total) * 100);
   };
